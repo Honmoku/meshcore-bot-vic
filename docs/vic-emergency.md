@@ -24,7 +24,7 @@ bot_longitude = 144.9633
 [VicEmergency_Command]
 enabled = true
 
-[VicEmergency_Service]
+[VicEmergencyAlerts_Service]
 enabled = true
 channel = #emergency
 radius_km = 50
@@ -47,7 +47,7 @@ Restart the bot. Within a couple of minutes the service posts every current warn
 | `vic all` | Statewide count of warnings by level, plus the most serious ones |
 | `vic fire [district]` | Today's Fire Danger Rating per fire district and any Total Fire Bans |
 
-Keywords: `vic`, `vicemergency`, `emv`.
+Keywords: `vic`, `emv`.
 
 **Examples**
 
@@ -103,7 +103,7 @@ https://emergency.vic.gov.au/respond/#!/warning/43701/moreinfo
 🔥 VIC fire danger | Wed 25 Nov: Central Extreme TFB
 ```
 
-| `[VicEmergency_Service]` option | Description | Default |
+| `[VicEmergencyAlerts_Service]` option | Description | Default |
 |--------|-------------|---------|
 | `enabled` | Turn the service on or off | `false` |
 | `channel` | Channel to post to | `#emergency` |

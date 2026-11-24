@@ -514,7 +514,7 @@ class BaseCommand(ABC):
         camel_case_map = {
             'dadjoke': 'DadJoke',
             'webviewer': 'WebViewer',
-            'vicemergency': 'VicEmergency',
+            'vic': 'VicEmergency',
         }
 
         if self.name in camel_case_map:

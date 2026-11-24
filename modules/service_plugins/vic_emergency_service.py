@@ -52,10 +52,10 @@ def _csv(value: str) -> list[str]:
     return [v.strip() for v in (value or "").split(",") if v.strip()]
 
 
-class VicEmergencyService(BaseServicePlugin):
+class VicEmergencyAlertsService(BaseServicePlugin):
     """Posts VicEmergency warnings, incidents and fire bans for Victoria, Australia."""
 
-    config_section = "VicEmergency_Service"
+    config_section = "VicEmergencyAlerts_Service"
     description = "VicEmergency warnings, incidents and fire bans (Victoria, Australia)"
 
     # Web-viewer settings schema (see modules/settings_schema.py)

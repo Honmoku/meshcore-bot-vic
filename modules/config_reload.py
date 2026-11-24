@@ -52,7 +52,7 @@ class ConfigReloadMixin:
             "Service_Overrides",
             "TelegramBridge",
             "Weather_Service",
-            "VicEmergency_Service",
+            "VicEmergencyAlerts_Service",
             "Webhook",
             "Web_Viewer",
             "Worldcup_Service",

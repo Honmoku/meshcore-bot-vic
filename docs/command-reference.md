@@ -563,7 +563,7 @@ alert king county
 
 ### `vic [town|postcode|lat,lon|all|fire]`
 
-VicEmergency warnings, incidents and fire danger for Victoria, Australia. Keywords: `vic`, `vicemergency`, `emv`.
+VicEmergency warnings, incidents and fire danger for Victoria, Australia. Keywords: `vic`, `emv`.
 
 **Usage:**
 ```
