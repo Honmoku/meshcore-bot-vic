@@ -183,7 +183,9 @@ class HelloLocalCommand(BaseCommand):
 class TestLocalPlugins:
     """Tests for local/commands discovery and loading."""
 
-    def test_discover_local_plugins_empty_when_no_dir(self, loader_bot):
+    def test_discover_local_plugins_empty_when_no_dir(self, loader_bot, tmp_path):
+        # A bot root without local/commands (this repo's own local/ ships plugins).
+        loader_bot.bot_root = tmp_path
         loader = PluginLoader(loader_bot, local_commands_dir=None)
         assert loader.discover_local_plugins() == []
 

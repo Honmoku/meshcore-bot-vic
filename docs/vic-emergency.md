@@ -7,6 +7,17 @@ There are two parts. You can use either one on its own:
 - **`vic` command**: anyone on the mesh can ask what's happening near them.
 - **VicEmergency Service**: posts new warnings near you to a channel by itself.
 
+Both are [local plugins](local-plugins.md), so the bot's core code is unchanged:
+
+| File | Purpose |
+|------|---------|
+| `local/commands/vicemergency_command.py` | The `vic` command |
+| `local/service_plugins/vic_emergency_service.py` | The alert service |
+| `local/service_plugins/vic_emergency_utils.py` | Shared feed client (the `*_utils.py` name stops it loading as a service) |
+| `local/data/vic_postcodes.csv` | Victorian postcode → latitude/longitude, for `vic 3350` and `postcode = 3350` |
+
+They are tracked in git even though the rest of `local/` is ignored. Put their settings in `local/config.ini` (or `config.ini`). The bot loads local plugins at start-up, so restart it after changing them.
+
 !!! warning "Not an official warning channel"
     Mesh delivery is best-effort. In an emergency, use official sources: **emergency.vic.gov.au**, the **VicEmergency app**, the **VicEmergency Hotline (1800 226 226)**, ABC local radio, and call **000** if life or property is threatened.
 
@@ -21,7 +32,7 @@ There are two parts. You can use either one on its own:
 bot_latitude = -37.8136
 bot_longitude = 144.9633
 
-[VicEmergency_Command]
+[Vic_Command]
 enabled = true
 
 [VicEmergency_Service]
@@ -68,7 +79,7 @@ Total Fire Ban: Mallee, Wimmera
 
 Warning levels are shown as 🔴 Emergency Warning, 🟠 Watch and Act, 🟡 Advice (including Bureau of Meteorology flood/weather warnings), and 🔵 Community Update/Information. Distances are measured to the nearest point of the warning area. "in area" means the location is inside it.
 
-| `[VicEmergency_Command]` option | Description | Default |
+| `[Vic_Command]` option | Description | Default |
 |--------|-------------|---------|
 | `enabled` | Turn the command on or off | `true` |
 | `radius_km` | Search radius for `vic` and `vic <town>` | `50` |
@@ -125,6 +136,43 @@ https://emergency.vic.gov.au/respond/#!/warning/43701/moreinfo
 | `discord_webhook_urls`, `telegram_chat_ids` | Also send alerts off-mesh | — |
 
 Fire districts: Mallee, Wimmera, South West, Northern Country, North Central, Central, North East, West and South Gippsland, East Gippsland.
+
+### Full example
+
+Every option with its default. Copy it into `local/config.ini` and change what you need:
+
+```ini
+[Vic_Command]
+enabled = true
+radius_km = 50
+max_results = 4
+min_warning_level = community
+include_incidents = true
+# default_lat = -37.8136
+# default_lon = 144.9633
+
+[VicEmergency_Service]
+enabled = false
+channel = #emergency
+# flood_scope = #vic
+poll_interval = 120000
+min_warning_level = advice
+# latitude = -37.8136
+# longitude = 144.9633
+# postcode = 3350
+radius_km = 50
+# keywords = Ballarat, Bendigo
+include_incidents = false
+# incident_categories = Fire, Flooding
+post_level_changes = true
+send_link = true
+max_length = 280
+# fire_districts = Central, North Central
+min_fire_danger = extreme
+announce_total_fire_ban = true
+# discord_webhook_urls =
+# telegram_chat_ids =
+```
 
 **Deduplication.** Posted warnings, and the levels they were posted at, are stored in the `bot_metadata` table (`vic_emergency_seen`, `vic_emergency_fire_posted`). A restart does not repost them. When a warning leaves the feed it is forgotten, so if it is issued again it is posted again.
 

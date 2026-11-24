@@ -1,12 +1,35 @@
-"""Tests for VicEmergency (Victoria, Australia) feed parsing, the vic command and the service."""
+"""Tests for the VicEmergency local plugins (Victoria, Australia): feed parsing, the vic command and the service.
+
+The plugins live in local/ and are loaded from their file paths, as the bot loads them.
+"""
 
 import configparser
+import importlib.util
 import json
+import sys
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-from modules.clients.vic_emergency_client import (
+ROOT = Path(__file__).resolve().parents[2]
+LOCAL = ROOT / "local"
+
+
+def _load(module_name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+vic_command_module = _load("test_local_vicemergency_command", LOCAL / "commands" / "vicemergency_command.py")
+vic_service_module = _load("test_local_vic_emergency_service", LOCAL / "service_plugins" / "vic_emergency_service.py")
+VicEmergencyCommand = vic_command_module.VicEmergencyCommand
+VicEmergencyService = vic_service_module.VicEmergencyService
+
+from vic_emergency_utils import (  # noqa: E402  (registered by the plugins above)
     LEVEL_ADVICE,
     LEVEL_COMMUNITY,
     LEVEL_EMERGENCY,
@@ -22,8 +45,6 @@ from modules.clients.vic_emergency_client import (
     parse_level,
     shorten_places,
 )
-from modules.commands.vicemergency_command import VicEmergencyCommand
-from modules.service_plugins.vic_emergency_service import VicEmergencyService
 
 KANIVA = (-36.38, 141.24)
 MELBOURNE = (-37.81, 144.96)
@@ -286,8 +307,8 @@ def _command_bot():
     cfg.add_section("Channels")
     cfg.set("Channels", "monitor_channels", "general")
     cfg.add_section("Keywords")
-    cfg.add_section("VicEmergency_Command")
-    cfg.set("VicEmergency_Command", "enabled", "true")
+    cfg.add_section("Vic_Command")
+    cfg.set("Vic_Command", "enabled", "true")
     bot.config = cfg
     bot.translator = MagicMock()
     bot.translator.translate = Mock(side_effect=lambda key, **kw: key)
@@ -303,7 +324,7 @@ class TestCommand:
 
     def test_keywords_and_section(self):
         assert "vic" in self.cmd.keywords
-        assert self.cmd._derive_config_section_name() == "VicEmergency_Command"
+        assert self.cmd._derive_config_section_name() == "Vic_Command"
 
     def test_nearby(self):
         lines = self.cmd.nearby_lines(self.feed, *MELBOURNE, "you")
@@ -357,8 +378,7 @@ class TestMelbourneGpoDefault:
         assert (svc.lat, svc.lon) == (-37.56, 143.85)
 
     def test_command_defaults_to_melbourne_gpo(self, monkeypatch):
-        import modules.commands.vicemergency_command as mod
-
+        mod = vic_command_module
         for name in ("get_companion_lat_lon", "get_config_default_lat_lon", "get_bot_lat_lon"):
             monkeypatch.setattr(mod, name, lambda *a, **k: None)
         cmd = VicEmergencyCommand(_command_bot())
@@ -370,7 +390,7 @@ class TestMelbourneGpoDefault:
 
 class TestPostcodes:
     def test_known_postcodes(self):
-        from modules.clients.vic_emergency_client import postcode_lat_lon
+        from vic_emergency_utils import postcode_lat_lon
 
         assert postcode_lat_lon("3000") == (-37.81444, 144.98258)
         assert postcode_lat_lon(" 3350 ") == (-37.57194, 143.86451)
@@ -391,3 +411,41 @@ class TestPostcodes:
         assert (svc.lat, svc.lon) == (-37.57194, 143.86451)
         # Ballarat Watch and Act warning is within 50km of 3350.
         assert [t for t, _ in svc.pending_event_alerts(_sample_feed())][0].startswith("🟠 WATCH AND ACT")
+
+
+class TestLocalPluginLoading:
+    """The bot's own loaders pick the plugins up from local/ and load the postcode table from local/data."""
+
+    @pytest.fixture(autouse=True)
+    def _restore_local_packages(self):
+        # The loaders register local_plugins / local_services packages pointing at this
+        # repo's local/ dir; drop them afterwards so other loader tests start clean.
+        before = set(sys.modules)
+        yield
+        for name in set(sys.modules) - before:
+            if name.split(".")[0] in ("local_plugins", "local_services"):
+                del sys.modules[name]
+
+    def test_plugin_loader_loads_the_command(self):
+        from modules.plugin_loader import PluginLoader
+
+        bot = _command_bot()
+        loader = PluginLoader(bot, local_commands_dir=str(LOCAL / "commands"))
+        cmd = loader.load_plugin_from_path(LOCAL / "commands" / "vicemergency_command.py")
+        assert cmd is not None and cmd.name == "vic"
+        assert "vicemergency" in cmd.keywords
+
+    def test_service_loader_loads_the_service_but_not_the_utils(self):
+        from modules.service_plugin_loader import ServicePluginLoader
+
+        bot = _service_bot()
+        loader = ServicePluginLoader(bot, local_services_dir=str(LOCAL / "service_plugins"))
+        assert "vic_emergency_utils" not in loader.discover_local_services()
+        svc = loader.load_service_from_path(LOCAL / "service_plugins" / "vic_emergency_service.py")
+        assert svc is not None and svc.config_section == "VicEmergency_Service"
+
+    def test_postcodes_come_from_local_data(self):
+        import vic_emergency_utils
+
+        assert vic_emergency_utils.POSTCODES_CSV == LOCAL / "data" / "vic_postcodes.csv"
+        assert vic_emergency_utils.POSTCODES_CSV.is_file()

@@ -81,7 +81,6 @@ modules = [
     "web_viewer/static/*/*/*",
     "web_viewer/static/*/*/*/*",
     "templates/*.ini",
-    "clients/*.csv",
 ]
 translations = ["*.json"]
 "data.randomlines" = ["*.txt"]

@@ -13,6 +13,9 @@ which carries:
 
 No API key is needed. Parsing is kept free of network and bot dependencies so
 the command, the service plugin and tests can share it.
+
+This is a local plugin helper: the service loader skips ``*_utils.py`` files, so
+it is never started as a service. Postcodes come from local/data/vic_postcodes.csv.
 """
 
 from __future__ import annotations
@@ -37,7 +40,8 @@ MELBOURNE_GPO = (-37.8136, 144.9633)
 MELBOURNE_GPO_LABEL = "Melbourne GPO"
 
 # Victorian postcode -> (lat, lon), shipped next to this module.
-POSTCODES_CSV = Path(__file__).with_name("vic_postcodes.csv")
+# local/service_plugins/vic_emergency_utils.py -> local/data/vic_postcodes.csv
+POSTCODES_CSV = Path(__file__).resolve().parent.parent / "data" / "vic_postcodes.csv"
 _postcodes: Optional[dict[str, tuple[float, float]]] = None
 
 

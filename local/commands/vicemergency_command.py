@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VicEmergency command - current warnings, incidents and fire danger for Victoria, Australia.
+VicEmergency command (local plugin, local/commands/) - current warnings, incidents and fire danger for Victoria, Australia.
 
 Data: the public VicEmergency feed behind https://emergency.vic.gov.au (no API key).
 
@@ -16,13 +16,45 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import importlib.util
 import re
+import sys
 import time
 from collections import Counter
 from datetime import date
+from pathlib import Path
 from typing import Optional
 
-from ..clients.vic_emergency_client import (
+from modules.commands.base_command import BaseCommand
+from modules.location import get_bot_lat_lon, get_companion_lat_lon, get_config_default_lat_lon
+from modules.models import MeshMessage
+from modules.utils import geocode_city_sync
+
+
+def _load_vic_utils() -> None:
+    """Import vic_emergency_utils.py (next to the VicEmergency service) as ``vic_emergency_utils``.
+
+    Local plugins are loaded from file paths, so the shared feed client is
+    loaded the same way, once, and reused by the command and the service.
+    """
+    if "vic_emergency_utils" in sys.modules:
+        return
+    path = Path(__file__).resolve().parent.parent / "service_plugins" / "vic_emergency_utils.py"
+    spec = importlib.util.spec_from_file_location("vic_emergency_utils", path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["vic_emergency_utils"] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        del sys.modules["vic_emergency_utils"]
+        raise
+
+
+_load_vic_utils()
+
+from vic_emergency_utils import (  # noqa: E402
     FIRE_DISTRICTS,
     LEVEL_ADVICE,
     LEVEL_COMMUNITY,
@@ -37,12 +69,8 @@ from ..clients.vic_emergency_client import (
     level_from_config,
     postcode_lat_lon,
 )
-from ..location import get_bot_lat_lon, get_companion_lat_lon, get_config_default_lat_lon
-from ..models import MeshMessage
-from ..utils import geocode_city_sync
-from .base_command import BaseCommand
 
-SECTION = "VicEmergency_Command"
+SECTION = "Vic_Command"
 FIRE_WORDS = {"fire", "fires", "fdr", "tfb", "ban", "bans", "firedanger"}
 ALL_WORDS = {"all", "state", "statewide", "vic", "victoria"}
 DISTRICT_SHORT = {
@@ -59,7 +87,7 @@ class VicEmergencyCommand(BaseCommand):
     """Look up VicEmergency warnings, incidents and fire danger ratings."""
 
     render_safe = True
-    name = "vicemergency"
+    name = "vic"
     honors_skip_channel_check = False
     enabled_attr = "vicemergency_enabled"
     keywords = ["vic", "vicemergency", "emv"]

@@ -182,6 +182,15 @@ local/commands/*
 local/service_plugins/*
 !local/service_plugins/.gitkeep
 
+# VicEmergency (Victoria, Australia) local plugins and data: tracked in this repo.
+# Re-include the folders (local/* above excludes them); other files in them stay ignored.
+!local/commands/
+!local/service_plugins/
+!local/commands/vicemergency_command.py
+!local/service_plugins/vic_emergency_service.py
+!local/service_plugins/vic_emergency_utils.py
+!local/data/
+
 .claude/
 
 # Local engineering audit reports (may contain security-sensitive findings)

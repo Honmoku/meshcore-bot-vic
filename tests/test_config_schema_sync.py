@@ -477,6 +477,10 @@ class TestSettingsSchemaValidationSync:
         documented = load_documented_keys_from_example(EXAMPLE_PATH)
         unknown = []
         for entry in view:
+            # Only bundled plugins are documented in config.ini.example; local
+            # plugins (local/commands, local/service_plugins) document their own.
+            if entry.get("source") == "local":
+                continue
             for f in entry["fields"]:
                 section = f.get("section") or entry["section"]
                 if not is_known_config_key(section, f["key"], documented):

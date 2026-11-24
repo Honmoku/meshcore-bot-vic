@@ -71,7 +71,6 @@ CANONICAL_NON_COMMAND_SECTIONS = frozenset({
     "DiscordBridge",
     "TelegramBridge",
     "DARC_MoWaS_Service",
-    "VicEmergency_Service",
     "Region_Warnings",
     "Repeater_Watch",
 })

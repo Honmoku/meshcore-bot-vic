@@ -575,7 +575,7 @@ vic all
 vic fire [district]
 ```
 
-**Response:** Warnings (🔴 Emergency, 🟠 Watch and Act, 🟡 Advice, 🔵 Community) and incidents near the location with distances, a statewide summary, or today's Fire Danger Ratings and Total Fire Bans. See [VicEmergency](vic-emergency.md).
+**Response:** Warnings (🔴 Emergency, 🟠 Watch and Act, 🟡 Advice, 🔵 Community) and incidents near the location with distances, a statewide summary, or today's Fire Danger Ratings and Total Fire Bans. A local plugin configured in `[Vic_Command]`; see [VicEmergency](vic-emergency.md).
 
 ---
 

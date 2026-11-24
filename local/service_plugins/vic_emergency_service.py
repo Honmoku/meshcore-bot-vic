@@ -2,7 +2,7 @@
 """
 VicEmergency Service for MeshCore Bot.
 
-Polls the public VicEmergency feed (https://emergency.vic.gov.au, Victoria,
+Local service plugin (local/service_plugins/). Polls the public VicEmergency feed (https://emergency.vic.gov.au, Victoria,
 Australia) and posts to a mesh channel when:
 
 * a warning (Emergency Warning, Watch and Act, Advice, Community Update, BoM
@@ -19,13 +19,42 @@ table so a restart does not repost the same warnings.
 from __future__ import annotations
 
 import asyncio
+import importlib.util
 import json
+import sys
 from datetime import date
+from pathlib import Path
 from typing import Any, Optional
 
 import requests
 
-from ..clients.vic_emergency_client import (
+from modules.service_plugins.base_service import BaseServicePlugin
+
+
+def _load_vic_utils() -> None:
+    """Import vic_emergency_utils.py (next to the VicEmergency service) as ``vic_emergency_utils``.
+
+    Local plugins are loaded from file paths, so the shared feed client is
+    loaded the same way, once, and reused by the command and the service.
+    """
+    if "vic_emergency_utils" in sys.modules:
+        return
+    path = Path(__file__).resolve().with_name("vic_emergency_utils.py")
+    spec = importlib.util.spec_from_file_location("vic_emergency_utils", path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["vic_emergency_utils"] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        del sys.modules["vic_emergency_utils"]
+        raise
+
+
+_load_vic_utils()
+
+from vic_emergency_utils import (  # noqa: E402
     FIRE_DANGER_LEVELS,
     LEVEL_ADVICE,
     LEVEL_ICONS,
@@ -42,7 +71,6 @@ from ..clients.vic_emergency_client import (
     level_from_config,
     postcode_lat_lon,
 )
-from .base_service import BaseServicePlugin
 
 METADATA_KEY_SEEN = "vic_emergency_seen"
 METADATA_KEY_FIRE = "vic_emergency_fire_posted"
@@ -149,7 +177,7 @@ class VicEmergencyService(BaseServicePlugin):
                 self.logger.warning("VicEmergency: unknown postcode %r, ignoring it", postcode)
         if lat is None or lon is None:
             try:
-                from ..location import get_bot_lat_lon
+                from modules.location import get_bot_lat_lon
 
                 loc = get_bot_lat_lon(self.bot, self.logger)
             except Exception:
