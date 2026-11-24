@@ -1,4 +1,8 @@
-# Build and deploy Material for MkDocs to GitHub Pages
+# Build Material for MkDocs and publish it to GitHub Pages with the official
+# Pages actions (Settings -> Pages -> Source: "GitHub Actions").
+#
+# The site and repository URLs come from the repository the workflow runs in,
+# so a fork publishes to https://<owner>.github.io/<repo>/ without edits.
 name: Deploy docs
 
 on:
@@ -8,10 +12,17 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; let an in-progress deployment finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -21,8 +32,32 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
       - name: Install MkDocs and Material
         run: pip install "mkdocs-material>=9.0.0,<10" "mkdocs-exclude>=1.0.0"
 
+      - name: Build site
+        env:
+          SITE_URL: ${{ steps.pages.outputs.base_url }}/
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: mkdocs build --site-dir _site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
-        run: mkdocs gh-deploy --force
+        id: deployment
+        uses: actions/deploy-pages@v4

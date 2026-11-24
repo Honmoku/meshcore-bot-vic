@@ -1087,6 +1087,22 @@ enabled = true
 # Optional: default coordinates when user does not specify a location
 # default_lat = 48.08
 # default_lon = -121.97
+[VicEmergency_Command]
+# VicEmergency warnings, incidents and fire danger for Victoria, Australia.
+# Usage: vic [town|lat,lon]  |  vic all  |  vic fire [district]
+# Keywords: vic, vicemergency, emv. No API key. See docs/vic-emergency.md.
+enabled = true
+# Search radius in km for "vic" / "vic <town>". Default: 50
+radius_km = 50
+# Most warnings/incidents listed in one reply. Default: 4
+max_results = 4
+# Lowest warning level listed: community, advice, watch_and_act, emergency. Default: community
+min_warning_level = community
+# List incidents as well as warnings. Default: true
+include_incidents = true
+# Location used when the sender has no position (falls back to [Bot] location)
+# default_lat = -37.8136
+# default_lon = 144.9631
 [Rain_Command]
 # Minute-level rain nowcast ("rain starting in ~20min") via Open-Meteo's
 # 15-minutely precipitation. Worldwide, no API key. Keywords: rain, nowcast, snow.
@@ -2551,6 +2567,70 @@ maxlongitude = -114.0
 # When true: notification message then link-only message. When false: no link sent.
 # Default: true
 send_link = true
+[VicEmergency_Service]
+# VicEmergency alerts for Victoria, Australia (true/false).
+# Polls the public feed behind https://emergency.vic.gov.au (no API key) and posts:
+#   - warnings (Emergency Warning, Watch and Act, Advice, Community Update,
+#     BoM flood/weather warnings) issued near the configured location,
+#     and again when a warning's level goes up or down;
+#   - optionally new incidents (fires, floods, tree down, rescues, ...);
+#   - optionally Total Fire Bans / high Fire Danger Ratings for watched districts.
+# Posted warnings are remembered in the database, so a restart does not repost them.
+# Pairs with the vic command. See docs/vic-emergency.md.
+enabled = false
+
+# Optional regional TC_FLOOD scope for mesh channel posts from this service.
+# flood_scope = #vic
+
+# Channel to post alerts to
+channel = #emergency
+
+# Poll interval (milliseconds). Minimum 30000. Default: 120000 (2 minutes)
+poll_interval = 120000
+
+# Lowest warning level to post: community, advice, watch_and_act, emergency
+# Default: advice
+min_warning_level = advice
+
+# Centre of the watched area. Empty = [Bot] bot_latitude / bot_longitude.
+# latitude = -37.8136
+# longitude = 144.9631
+
+# Only post events within this many km of the centre (a warning counts when the
+# centre is inside its warning area). 0 = all of Victoria. Default: 50
+radius_km = 50
+
+# Extra town/suburb names that always match, wherever they are (comma-separated)
+# keywords = Ballarat, Bendigo
+
+# Also post new incidents, not just warnings (true/false). Default: false
+include_incidents = false
+# Limit incidents to these categories (comma-separated). Empty = all.
+# Examples: Fire, Flooding, Tree Down, Hazardous Material, Accident / Rescue
+# incident_categories = Fire, Flooding
+
+# Repost a warning when its level changes (e.g. Advice -> Watch and Act). Default: true
+post_level_changes = true
+
+# Follow each warning with its emergency.vic.gov.au link in a second message. Default: true
+send_link = true
+
+# Cut alerts to this many characters (one mesh message is ~140). Default: 280
+max_length = 280
+
+# Fire districts to watch for Total Fire Bans and Fire Danger Ratings
+# (comma-separated). Empty = off. Districts: Mallee, Wimmera, South West,
+# Northern Country, North Central, Central, North East,
+# West and South Gippsland, East Gippsland
+# fire_districts = Central, North Central
+# Announce a rating at or above: moderate, high, extreme, catastrophic. Default: extreme
+min_fire_danger = extreme
+# Announce Total Fire Ban days for watched districts. Default: true
+announce_total_fire_ban = true
+
+# Optional: also send alerts to Discord webhooks / Telegram chats (comma-separated)
+# discord_webhook_urls =
+# telegram_chat_ids =
 [Worldcup_Service]
 # Live FIFA World Cup score updates posted to a channel (true/false).
 # Posts proactive messages as matches progress, e.g.:

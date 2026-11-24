@@ -54,7 +54,7 @@ _FALSE = {"0", "false", "no", "off"}
 
 # Command name -> section base for camelCase names (mirrors
 # BaseCommand._derive_config_section_name).
-_CAMEL_CASE_SECTION = {"dadjoke": "DadJoke", "webviewer": "WebViewer"}
+_CAMEL_CASE_SECTION = {"dadjoke": "DadJoke", "webviewer": "WebViewer", "vicemergency": "VicEmergency"}
 
 
 # ---------------------------------------------------------------------------

@@ -561,6 +561,23 @@ alert king county
 
 ---
 
+### `vic [town|lat,lon|all|fire]`
+
+VicEmergency warnings, incidents and fire danger for Victoria, Australia. Keywords: `vic`, `vicemergency`, `emv`.
+
+**Usage:**
+```
+vic
+vic ballarat
+vic -37.81,144.96
+vic all
+vic fire [district]
+```
+
+**Response:** Warnings (🔴 Emergency, 🟠 Watch and Act, 🟡 Advice, 🔵 Community) and incidents near the location with distances, a statewide summary, or today's Fire Danger Ratings and Total Fire Bans. See [VicEmergency](vic-emergency.md).
+
+---
+
 ## Gaming Commands
 
 ### `dice`

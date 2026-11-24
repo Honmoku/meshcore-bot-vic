@@ -1,10 +1,10 @@
 # Material for MkDocs - meshcore-bot documentation
 site_name: Meshcore Bot Documentation
 site_description: Documentation for the MeshCore bot and its services
-site_url: https://agessaman.github.io/meshcore-bot/
+site_url: !ENV [SITE_URL, 'https://agessaman.github.io/meshcore-bot/']
 
-repo_name: meshcore-bot
-repo_url: https://github.com/agessaman/meshcore-bot
+repo_name: !ENV [REPO_NAME, 'meshcore-bot']
+repo_url: !ENV [REPO_URL, 'https://github.com/agessaman/meshcore-bot']
 edit_uri: edit/main/docs/
 
 theme:
@@ -38,6 +38,7 @@ plugins:
         - local/**
 
 markdown_extensions:
+  - admonition
   - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true
@@ -78,6 +79,7 @@ nav:
     - Telegram Bridge: telegram-bridge.md
     - Packet Capture: packet-capture.md
     - Map Uploader: map-uploader.md
+    - VicEmergency (Victoria, AU): vic-emergency.md
     - Weather Service: weather-service.md
     - Earthquake Service: earthquake-service.md
     - Repeater Prefix Collision: repeater-prefix-collision-service.md

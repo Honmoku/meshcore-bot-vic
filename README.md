@@ -37,6 +37,7 @@ A Python bot that connects to MeshCore mesh networks via serial port, BLE, or TC
 - **Map Uploader**: Upload node adverts to map.meshcore.dev ([docs](docs/map-uploader.md))
 - **Weather Service**: Scheduled forecasts, alerts, and lightning detection ([docs](docs/weather-service.md))
 - **Earthquake Service**: Scheduled USGS earthquake alerts for a configured region ([docs](docs/earthquake-service.md))
+- **VicEmergency (Victoria, Australia)**: `vic` command and alert service for VicEmergency warnings, incidents, Fire Danger Ratings and Total Fire Bans ([docs](docs/vic-emergency.md))
 - **Repeater Prefix Collision Service**: Detect and alert on repeater prefix collisions ([docs](docs/repeater-prefix-collision-service.md))
 - **MQTT Weather Relay**: Publish weather data from custom MQTT topics (configured via `MqttWeather` + `[Weather]`)
 - **Webhook Service**: Accept inbound HTTP POST payloads and relay to channels or DMs
