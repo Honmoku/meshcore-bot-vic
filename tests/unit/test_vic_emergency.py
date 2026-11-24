@@ -366,3 +366,28 @@ class TestMelbourneGpoDefault:
         assert (lat, lon, label, err) == (-37.8136, 144.9633, "Melbourne GPO", None)
         assert cmd.nearby_lines(_sample_feed(), lat, lon, label)[0] == \
             "VicEmergency 50km of Melbourne GPO: 1 warning, 1 incident"
+
+
+class TestPostcodes:
+    def test_known_postcodes(self):
+        from modules.clients.vic_emergency_client import postcode_lat_lon
+
+        assert postcode_lat_lon("3000") == (-37.81444, 144.98258)
+        assert postcode_lat_lon(" 3350 ") == (-37.57194, 143.86451)
+        assert postcode_lat_lon("2000") is None  # Sydney: not in the VIC table
+        assert postcode_lat_lon("") is None
+
+    def test_command_resolves_postcode(self):
+        cmd = VicEmergencyCommand(_command_bot())
+        assert cmd._resolve_location(MagicMock(), "3350") == (-37.57194, 143.86451, "3350", None)
+        lat, lon, label, err = cmd._resolve_location(MagicMock(), "9999")
+        assert lat is None and err == "Unknown VIC postcode 9999"
+
+    def test_service_uses_postcode_when_no_coordinates(self):
+        bot = _service_bot({"postcode": "3350"})
+        bot.config.remove_option("VicEmergency_Service", "latitude")
+        bot.config.remove_option("VicEmergency_Service", "longitude")
+        svc = VicEmergencyService(bot)
+        assert (svc.lat, svc.lon) == (-37.57194, 143.86451)
+        # Ballarat Watch and Act warning is within 50km of 3350.
+        assert [t for t, _ in svc.pending_event_alerts(_sample_feed())][0].startswith("🟠 WATCH AND ACT")

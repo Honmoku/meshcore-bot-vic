@@ -40,6 +40,7 @@ from ..clients.vic_emergency_client import (
     format_incident_alert,
     format_warning_alert,
     level_from_config,
+    postcode_lat_lon,
 )
 from .base_service import BaseServicePlugin
 
@@ -69,6 +70,8 @@ class VicEmergencyService(BaseServicePlugin):
          "help": "Centre of the watched area. Empty uses [Bot] bot_latitude, else Melbourne GPO."},
         {"key": "longitude", "label": "Centre longitude", "type": "float", "min": -180, "max": 180,
          "default": "", "help": "Centre of the watched area. Empty uses [Bot] bot_longitude, else Melbourne GPO."},
+        {"key": "postcode", "label": "Centre postcode", "type": "str", "default": "",
+         "help": "Victorian postcode to use as the centre when latitude/longitude are empty (e.g. 3350)."},
         {"key": "radius_km", "label": "Radius", "type": "float", "min": 0, "default": 50, "unit": "km",
          "help": "Only post events within this distance. 0 = all of Victoria."},
         {"key": "keywords", "label": "Extra places", "type": "str", "default": "",
@@ -137,6 +140,13 @@ class VicEmergencyService(BaseServicePlugin):
             cfg.get(section, "latitude").strip() else None
         lon = cfg.getfloat(section, "longitude", fallback=None) if cfg.has_option(section, "longitude") and \
             cfg.get(section, "longitude").strip() else None
+        postcode = cfg.get(section, "postcode", fallback="").strip()
+        if (lat is None or lon is None) and postcode:
+            pc = postcode_lat_lon(postcode)
+            if pc:
+                lat, lon = pc
+            else:
+                self.logger.warning("VicEmergency: unknown postcode %r, ignoring it", postcode)
         if lat is None or lon is None:
             try:
                 from ..location import get_bot_lat_lon

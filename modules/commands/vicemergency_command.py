@@ -7,6 +7,7 @@ Data: the public VicEmergency feed behind https://emergency.vic.gov.au (no API k
 Usage:
     vic                 warnings and incidents near you (companion, config, bot location, else Melbourne GPO)
     vic <town>          ... near a Victorian town or suburb (e.g. "vic ballarat")
+    vic <postcode>      ... near a Victorian postcode (e.g. "vic 3350")
     vic <lat,lon>       ... near coordinates
     vic all             statewide warning summary
     vic fire [district] today's Fire Danger Ratings and Total Fire Bans
@@ -34,6 +35,7 @@ from ..clients.vic_emergency_client import (
     filter_events,
     format_event_short,
     level_from_config,
+    postcode_lat_lon,
 )
 from ..location import get_bot_lat_lon, get_companion_lat_lon, get_config_default_lat_lon
 from ..models import MeshMessage
@@ -67,8 +69,8 @@ class VicEmergencyCommand(BaseCommand):
     cooldown_seconds = 5
 
     short_description = "VicEmergency warnings, incidents and fire danger near you"
-    usage = "vic [town|lat,lon|all|fire [district]]"
-    examples = ["vic", "vic ballarat", "vic -37.81,144.96", "vic all", "vic fire", "vic fire central"]
+    usage = "vic [town|postcode|lat,lon|all|fire [district]]"
+    examples = ["vic", "vic ballarat", "vic 3350", "vic -37.81,144.96", "vic all", "vic fire", "vic fire central"]
     parameters = [
         {"name": "location", "description": "Optional: Victorian town, lat,lon, 'all' for statewide, "
                                             "or 'fire' for fire danger ratings and Total Fire Bans."},
@@ -126,6 +128,11 @@ class VicEmergencyCommand(BaseCommand):
                 if loc:
                     return loc[0], loc[1], "you", None
             return MELBOURNE_GPO[0], MELBOURNE_GPO[1], MELBOURNE_GPO_LABEL, None
+        if re.fullmatch(r"\d{4}", text):
+            pc = postcode_lat_lon(text)
+            if pc is None:
+                return None, None, "", f"Unknown VIC postcode {text}"
+            return pc[0], pc[1], text, None
         m = re.match(r"^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$", text)
         if m:
             lat, lon = float(m.group(1)), float(m.group(2))

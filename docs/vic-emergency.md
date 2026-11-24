@@ -42,6 +42,7 @@ Restart the bot. Within a couple of minutes the service posts every current warn
 |-------|-------|
 | `vic` | Warnings and incidents within `radius_km` of you. Uses your advertised position, then `default_lat`/`default_lon`, then the bot's location, then Melbourne GPO |
 | `vic <town>` | The same, around a Victorian town or suburb (e.g. `vic ballarat`) |
+| `vic <postcode>` | The same, around a Victorian postcode (e.g. `vic 3350`) |
 | `vic <lat>,<lon>` | The same, around coordinates |
 | `vic all` | Statewide count of warnings by level, plus the most serious ones |
 | `vic fire [district]` | Today's Fire Danger Rating per fire district and any Total Fire Bans |
@@ -108,6 +109,7 @@ https://emergency.vic.gov.au/respond/#!/warning/43701/moreinfo
 | `channel` | Channel to post to | `#emergency` |
 | `poll_interval` | Milliseconds between checks (minimum 30000) | `120000` |
 | `min_warning_level` | `community`, `advice`, `watch_and_act` or `emergency` | `advice` |
+| `postcode` | Victorian postcode to use as the centre when `latitude`/`longitude` are empty | empty |
 | `latitude`, `longitude` | Centre of the watched area | `[Bot]` location, else Melbourne GPO (-37.8136, 144.9633) |
 | `radius_km` | Distance from the centre; `0` = all of Victoria | `50` |
 | `keywords` | Town names that always match, wherever they are | empty |

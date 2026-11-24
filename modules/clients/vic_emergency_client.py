@@ -17,10 +17,12 @@ the command, the service plugin and tests can share it.
 
 from __future__ import annotations
 
+import csv
 import math
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Optional
 
 import requests
@@ -33,6 +35,28 @@ USER_AGENT = "meshcore-bot (VicEmergency client)"
 # Default centre when nothing else is configured: Melbourne GPO, 350 Bourke St.
 MELBOURNE_GPO = (-37.8136, 144.9633)
 MELBOURNE_GPO_LABEL = "Melbourne GPO"
+
+# Victorian postcode -> (lat, lon), shipped next to this module.
+POSTCODES_CSV = Path(__file__).with_name("vic_postcodes.csv")
+_postcodes: Optional[dict[str, tuple[float, float]]] = None
+
+
+def postcode_lat_lon(postcode: str) -> Optional[tuple[float, float]]:
+    """Coordinates for a 4-digit Victorian postcode (e.g. "3350"), or None if unknown."""
+    global _postcodes
+    if _postcodes is None:
+        table: dict[str, tuple[float, float]] = {}
+        try:
+            with POSTCODES_CSV.open(encoding="utf-8", newline="") as f:
+                for row in csv.DictReader(f):
+                    try:
+                        table[row["postcode"].strip()] = (float(row["lat"]), float(row["lon"]))
+                    except (KeyError, TypeError, ValueError):
+                        continue
+        except OSError:
+            pass
+        _postcodes = table
+    return _postcodes.get((postcode or "").strip())
 
 # Warning levels, lowest to highest. The Australian Warning System uses three
 # levels (Advice, Watch and Act, Emergency Warning); VicEmergency also issues

@@ -1089,7 +1089,7 @@ enabled = true
 # default_lon = -121.97
 [VicEmergency_Command]
 # VicEmergency warnings, incidents and fire danger for Victoria, Australia.
-# Usage: vic [town|lat,lon]  |  vic all  |  vic fire [district]
+# Usage: vic [town|postcode|lat,lon]  |  vic all  |  vic fire [district]
 # Keywords: vic, vicemergency, emv. No API key. See docs/vic-emergency.md.
 enabled = true
 # Search radius in km for "vic" / "vic <town>". Default: 50
@@ -2596,6 +2596,8 @@ min_warning_level = advice
 # or Melbourne GPO (350 Bourke St) when the bot has no location either.
 # latitude = -37.8136
 # longitude = 144.9633
+# Or give a Victorian postcode as the centre (used when latitude/longitude are empty)
+# postcode = 3350
 
 # Only post events within this many km of the centre (a warning counts when the
 # centre is inside its warning area). 0 = all of Victoria. Default: 50
