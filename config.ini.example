@@ -1090,7 +1090,7 @@ enabled = true
 [VicEmergency_Command]
 # VicEmergency warnings, incidents and fire danger for Victoria, Australia.
 # Usage: vic [town|postcode|lat,lon]  |  vic all  |  vic fire [district]
-# Keywords: vic, emv. No API key. See docs/vic-emergency.md.
+# Keywords: vic, vicemergency, emv. No API key. See docs/vic-emergency.md.
 enabled = true
 # Search radius in km for "vic" / "vic <town>". Default: 50
 radius_km = 50
@@ -2567,7 +2567,7 @@ maxlongitude = -114.0
 # When true: notification message then link-only message. When false: no link sent.
 # Default: true
 send_link = true
-[VicEmergencyAlerts_Service]
+[VicEmergency_Service]
 # VicEmergency alerts for Victoria, Australia (true/false).
 # Polls the public feed behind https://emergency.vic.gov.au (no API key) and posts:
 #   - warnings (Emergency Warning, Watch and Act, Advice, Community Update,

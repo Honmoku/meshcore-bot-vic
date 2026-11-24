@@ -59,10 +59,10 @@ class VicEmergencyCommand(BaseCommand):
     """Look up VicEmergency warnings, incidents and fire danger ratings."""
 
     render_safe = True
-    name = "vic"
+    name = "vicemergency"
     honors_skip_channel_check = False
-    enabled_attr = "vic_enabled"
-    keywords = ["vic", "emv"]
+    enabled_attr = "vicemergency_enabled"
+    keywords = ["vic", "vicemergency", "emv"]
     description = "VicEmergency warnings, incidents and fire danger (Victoria, Australia)"
     category = "weather"
     requires_internet = True
@@ -96,7 +96,7 @@ class VicEmergencyCommand(BaseCommand):
 
     def __init__(self, bot):
         super().__init__(bot)
-        self.vic_enabled = self.get_config_value(SECTION, "enabled", fallback=True, value_type="bool")
+        self.vicemergency_enabled = self.get_config_value(SECTION, "enabled", fallback=True, value_type="bool")
         self.radius_km = self.get_config_value(SECTION, "radius_km", fallback=50.0, value_type="float")
         self.max_results = self.get_config_value(SECTION, "max_results", fallback=4, value_type="int")
         self.min_level = level_from_config(

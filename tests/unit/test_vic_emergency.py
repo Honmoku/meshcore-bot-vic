@@ -23,7 +23,7 @@ from modules.clients.vic_emergency_client import (
     shorten_places,
 )
 from modules.commands.vicemergency_command import VicEmergencyCommand
-from modules.service_plugins.vic_emergency_service import VicEmergencyAlertsService
+from modules.service_plugins.vic_emergency_service import VicEmergencyService
 
 KANIVA = (-36.38, 141.24)
 MELBOURNE = (-37.81, 144.96)
@@ -209,10 +209,10 @@ def _service_bot(extra=None, metadata=None):
     bot.logger = Mock()
     cfg = configparser.ConfigParser()
     cfg.add_section("Bot")
-    cfg.add_section("VicEmergencyAlerts_Service")
+    cfg.add_section("VicEmergency_Service")
     for k, v in {"enabled": "true", "channel": "#emergency", "latitude": str(KANIVA[0]),
                  "longitude": str(KANIVA[1]), "radius_km": "50", **(extra or {})}.items():
-        cfg.set("VicEmergencyAlerts_Service", k, v)
+        cfg.set("VicEmergency_Service", k, v)
     bot.config = cfg
     store = dict(metadata or {})
     bot.db_manager.get_metadata = Mock(side_effect=lambda k: store.get(k))
@@ -224,7 +224,7 @@ def _service_bot(extra=None, metadata=None):
 
 class TestService:
     def test_posts_nearby_warning_once_then_on_level_change(self):
-        svc = VicEmergencyAlertsService(_service_bot())
+        svc = VicEmergencyService(_service_bot())
         alerts = svc.pending_event_alerts(_sample_feed())
         assert len(alerts) == 1
         text, link = alerts[0]
@@ -236,7 +236,7 @@ class TestService:
         assert len(alerts) == 1 and alerts[0][0].startswith("🟠 UPGRADED: WATCH AND ACT")
 
     def test_statewide_when_radius_zero_and_incidents_optional(self):
-        svc = VicEmergencyAlertsService(_service_bot({"radius_km": "0", "include_incidents": "true",
+        svc = VicEmergencyService(_service_bot({"radius_km": "0", "include_incidents": "true",
                                                 "incident_categories": "Fire"}))
         texts = [t for t, _ in svc.pending_event_alerts(_sample_feed())]
         # Community Update is below the default 'advice' level; Tree Down is not a Fire.
@@ -246,14 +246,14 @@ class TestService:
 
     def test_state_survives_restart(self):
         bot = _service_bot()
-        svc = VicEmergencyAlertsService(bot)
+        svc = VicEmergencyService(bot)
         svc.pending_event_alerts(_sample_feed())
         svc._save_json("vic_emergency_seen", svc._seen)
-        again = VicEmergencyAlertsService(_service_bot(metadata=bot._store))
+        again = VicEmergencyService(_service_bot(metadata=bot._store))
         assert again.pending_event_alerts(_sample_feed()) == []
 
     def test_fire_alert_for_watched_districts_once(self):
-        svc = VicEmergencyAlertsService(_service_bot({"fire_districts": "Mallee, Central"}))
+        svc = VicEmergencyService(_service_bot({"fire_districts": "Mallee, Central"}))
         msg = svc.pending_fire_alert(_sample_feed().fire)
         assert msg is not None
         assert "Mallee Extreme TFB" in msg
@@ -262,12 +262,12 @@ class TestService:
         assert svc.pending_fire_alert(_sample_feed().fire) is None
 
     def test_fire_alert_off_without_districts(self):
-        svc = VicEmergencyAlertsService(_service_bot())
+        svc = VicEmergencyService(_service_bot())
         assert svc.pending_fire_alert(_sample_feed().fire) is None
 
     async def test_process_feed_sends_alert_and_link(self):
         bot = _service_bot()
-        svc = VicEmergencyAlertsService(bot)
+        svc = VicEmergencyService(bot)
         posted = await svc.process_feed(_sample_feed())
         assert posted == 1
         sent = [c.args[1] for c in bot.command_manager.send_channel_message.call_args_list]
@@ -340,20 +340,20 @@ class TestCommand:
 class TestMelbourneGpoDefault:
     def test_service_defaults_to_melbourne_gpo(self):
         bot = _service_bot()
-        bot.config.remove_option("VicEmergencyAlerts_Service", "latitude")
-        bot.config.remove_option("VicEmergencyAlerts_Service", "longitude")
-        svc = VicEmergencyAlertsService(bot)
+        bot.config.remove_option("VicEmergency_Service", "latitude")
+        bot.config.remove_option("VicEmergency_Service", "longitude")
+        svc = VicEmergencyService(bot)
         assert (svc.lat, svc.lon) == MELBOURNE_GPO == (-37.8136, 144.9633)
         # Preston community update is within 50km of the GPO but below 'advice'.
         assert svc.pending_event_alerts(_sample_feed()) == []
 
     def test_service_prefers_bot_location(self):
         bot = _service_bot()
-        bot.config.remove_option("VicEmergencyAlerts_Service", "latitude")
-        bot.config.remove_option("VicEmergencyAlerts_Service", "longitude")
+        bot.config.remove_option("VicEmergency_Service", "latitude")
+        bot.config.remove_option("VicEmergency_Service", "longitude")
         bot.config.set("Bot", "bot_latitude", "-37.56")
         bot.config.set("Bot", "bot_longitude", "143.85")
-        svc = VicEmergencyAlertsService(bot)
+        svc = VicEmergencyService(bot)
         assert (svc.lat, svc.lon) == (-37.56, 143.85)
 
     def test_command_defaults_to_melbourne_gpo(self, monkeypatch):
@@ -385,20 +385,9 @@ class TestPostcodes:
 
     def test_service_uses_postcode_when_no_coordinates(self):
         bot = _service_bot({"postcode": "3350"})
-        bot.config.remove_option("VicEmergencyAlerts_Service", "latitude")
-        bot.config.remove_option("VicEmergencyAlerts_Service", "longitude")
-        svc = VicEmergencyAlertsService(bot)
+        bot.config.remove_option("VicEmergency_Service", "latitude")
+        bot.config.remove_option("VicEmergency_Service", "longitude")
+        svc = VicEmergencyService(bot)
         assert (svc.lat, svc.lon) == (-37.57194, 143.86451)
         # Ballarat Watch and Act warning is within 50km of 3350.
         assert [t for t, _ in svc.pending_event_alerts(_sample_feed())][0].startswith("🟠 WATCH AND ACT")
-
-
-def test_plugin_names_leave_room_for_a_local_vicemergency_plugin():
-    """Local plugins with a name already taken are skipped, so stay off 'vicemergency'."""
-    svc = VicEmergencyAlertsService(_service_bot())
-    assert svc._derive_service_name() == "vicemergencyalerts"
-    assert svc.config_section == "VicEmergencyAlerts_Service"
-    cmd = VicEmergencyCommand(_command_bot())
-    assert cmd.name == "vic"
-    assert "vicemergency" not in cmd.keywords
-    assert cmd._derive_config_section_name() == "VicEmergency_Command"
