@@ -30,6 +30,10 @@ VIC_WARNING_URL = "https://emergency.vic.gov.au/respond/#!/warning/{id}/moreinfo
 VIC_RESPOND_URL = "https://emergency.vic.gov.au/respond/"
 USER_AGENT = "meshcore-bot (VicEmergency client)"
 
+# Default centre when nothing else is configured: Melbourne GPO, 350 Bourke St.
+MELBOURNE_GPO = (-37.8136, 144.9633)
+MELBOURNE_GPO_LABEL = "Melbourne GPO"
+
 # Warning levels, lowest to highest. The Australian Warning System uses three
 # levels (Advice, Watch and Act, Emergency Warning); VicEmergency also issues
 # "Community Update"/"Community Information" notices below Advice.

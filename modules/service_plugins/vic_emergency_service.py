@@ -30,6 +30,7 @@ from ..clients.vic_emergency_client import (
     LEVEL_ADVICE,
     LEVEL_ICONS,
     LEVEL_NAMES,
+    MELBOURNE_GPO,
     FireConditions,
     VicEvent,
     VicFeed,
@@ -65,9 +66,9 @@ class VicEmergencyService(BaseServicePlugin):
         {"key": "min_warning_level", "label": "Minimum warning level", "type": "str", "default": "advice",
          "help": "community, advice, watch_and_act or emergency."},
         {"key": "latitude", "label": "Centre latitude", "type": "float", "min": -90, "max": 90, "default": "",
-         "help": "Centre of the watched area. Empty uses [Bot] bot_latitude."},
+         "help": "Centre of the watched area. Empty uses [Bot] bot_latitude, else Melbourne GPO."},
         {"key": "longitude", "label": "Centre longitude", "type": "float", "min": -180, "max": 180,
-         "default": "", "help": "Centre of the watched area. Empty uses [Bot] bot_longitude."},
+         "default": "", "help": "Centre of the watched area. Empty uses [Bot] bot_longitude, else Melbourne GPO."},
         {"key": "radius_km", "label": "Radius", "type": "float", "min": 0, "default": 50, "unit": "km",
          "help": "Only post events within this distance. 0 = all of Victoria."},
         {"key": "keywords", "label": "Extra places", "type": "str", "default": "",
@@ -145,11 +146,13 @@ class VicEmergencyService(BaseServicePlugin):
                 loc = None
             if loc:
                 lat, lon = loc
-        if (lat is None or lon is None) and self.radius_km > 0:
-            self.logger.warning(
-                "VicEmergency: no latitude/longitude configured (service or [Bot]); "
-                "posting events for all of Victoria"
-            )
+        if lat is None or lon is None:
+            lat, lon = MELBOURNE_GPO
+            if self.radius_km > 0:
+                self.logger.info(
+                    "VicEmergency: no latitude/longitude configured (service or [Bot]); "
+                    "using Melbourne GPO (%.4f, %.4f)", lat, lon,
+                )
         return lat, lon
 
     def _load_json(self, key: str) -> dict:

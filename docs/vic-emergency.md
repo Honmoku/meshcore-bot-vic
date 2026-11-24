@@ -17,8 +17,9 @@ There are two parts. You can use either one on its own:
 ```ini
 [Bot]
 # Used as the centre for both the command and the service
-bot_latitude = -37.5622
-bot_longitude = 143.8503
+# Melbourne GPO, 350 Bourke St (also the default when unset)
+bot_latitude = -37.8136
+bot_longitude = 144.9633
 
 [VicEmergency_Command]
 enabled = true
@@ -39,7 +40,7 @@ Restart the bot. Within a couple of minutes the service posts every current warn
 
 | Usage | Reply |
 |-------|-------|
-| `vic` | Warnings and incidents within `radius_km` of you. Uses your advertised position, then `default_lat`/`default_lon`, then the bot's location |
+| `vic` | Warnings and incidents within `radius_km` of you. Uses your advertised position, then `default_lat`/`default_lon`, then the bot's location, then Melbourne GPO |
 | `vic <town>` | The same, around a Victorian town or suburb (e.g. `vic ballarat`) |
 | `vic <lat>,<lon>` | The same, around coordinates |
 | `vic all` | Statewide count of warnings by level, plus the most serious ones |
@@ -73,7 +74,7 @@ Warning levels are shown as 🔴 Emergency Warning, 🟠 Watch and Act, 🟡 Adv
 | `max_results` | Most warnings/incidents listed in one reply | `4` |
 | `min_warning_level` | `community`, `advice`, `watch_and_act` or `emergency` | `community` |
 | `include_incidents` | List incidents as well as warnings | `true` |
-| `default_lat`, `default_lon` | Location when the sender has no position | bot location |
+| `default_lat`, `default_lon` | Location when the sender has no position | bot location, else Melbourne GPO |
 
 The feed is cached for 60 seconds, so several people asking at once make one request.
 
@@ -107,7 +108,7 @@ https://emergency.vic.gov.au/respond/#!/warning/43701/moreinfo
 | `channel` | Channel to post to | `#emergency` |
 | `poll_interval` | Milliseconds between checks (minimum 30000) | `120000` |
 | `min_warning_level` | `community`, `advice`, `watch_and_act` or `emergency` | `advice` |
-| `latitude`, `longitude` | Centre of the watched area | `[Bot]` location |
+| `latitude`, `longitude` | Centre of the watched area | `[Bot]` location, else Melbourne GPO (-37.8136, 144.9633) |
 | `radius_km` | Distance from the centre; `0` = all of Victoria | `50` |
 | `keywords` | Town names that always match, wherever they are | empty |
 | `include_incidents` | Also post new incidents | `false` |

@@ -5,7 +5,7 @@ VicEmergency command - current warnings, incidents and fire danger for Victoria,
 Data: the public VicEmergency feed behind https://emergency.vic.gov.au (no API key).
 
 Usage:
-    vic                 warnings and incidents near you (companion, config or bot location)
+    vic                 warnings and incidents near you (companion, config, bot location, else Melbourne GPO)
     vic <town>          ... near a Victorian town or suburb (e.g. "vic ballarat")
     vic <lat,lon>       ... near coordinates
     vic all             statewide warning summary
@@ -27,6 +27,8 @@ from ..clients.vic_emergency_client import (
     LEVEL_COMMUNITY,
     LEVEL_EMERGENCY,
     LEVEL_WATCH_AND_ACT,
+    MELBOURNE_GPO,
+    MELBOURNE_GPO_LABEL,
     VicFeed,
     fetch_feed,
     filter_events,
@@ -82,9 +84,9 @@ class VicEmergencyCommand(BaseCommand):
         {"key": "include_incidents", "label": "Include incidents", "type": "bool", "default": True,
          "help": "List incidents (fires, floods, rescues...) as well as warnings."},
         {"key": "default_lat", "label": "Default latitude", "type": "float", "min": -90, "max": 90, "default": "",
-         "help": "Used when the sender has no position (falls back to the bot location)."},
+         "help": "Used when the sender has no position (then bot location, then Melbourne GPO)."},
         {"key": "default_lon", "label": "Default longitude", "type": "float", "min": -180, "max": 180,
-         "default": "", "help": "Used when the sender has no position (falls back to the bot location)."},
+         "default": "", "help": "Used when the sender has no position (then bot location, then Melbourne GPO)."},
     ]
 
     # Feed responses are shared between users for a short time to spare the server.
@@ -123,7 +125,7 @@ class VicEmergencyCommand(BaseCommand):
                         get_bot_lat_lon(self.bot, self.logger)):
                 if loc:
                     return loc[0], loc[1], "you", None
-            return None, None, "", "No location known. Try: vic <town>, vic all, or vic fire"
+            return MELBOURNE_GPO[0], MELBOURNE_GPO[1], MELBOURNE_GPO_LABEL, None
         m = re.match(r"^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$", text)
         if m:
             lat, lon = float(m.group(1)), float(m.group(2))

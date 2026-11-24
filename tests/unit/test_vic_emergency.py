@@ -11,6 +11,7 @@ from modules.clients.vic_emergency_client import (
     LEVEL_COMMUNITY,
     LEVEL_EMERGENCY,
     LEVEL_WATCH_AND_ACT,
+    MELBOURNE_GPO,
     filter_events,
     fire_danger_index,
     format_incident_short,
@@ -334,3 +335,34 @@ class TestCommand:
     def test_resolve_coordinates(self):
         lat, lon, label, err = self.cmd._resolve_location(MagicMock(), "-37.81,144.96")
         assert (lat, lon, err) == (-37.81, 144.96, None)
+
+
+class TestMelbourneGpoDefault:
+    def test_service_defaults_to_melbourne_gpo(self):
+        bot = _service_bot()
+        bot.config.remove_option("VicEmergency_Service", "latitude")
+        bot.config.remove_option("VicEmergency_Service", "longitude")
+        svc = VicEmergencyService(bot)
+        assert (svc.lat, svc.lon) == MELBOURNE_GPO == (-37.8136, 144.9633)
+        # Preston community update is within 50km of the GPO but below 'advice'.
+        assert svc.pending_event_alerts(_sample_feed()) == []
+
+    def test_service_prefers_bot_location(self):
+        bot = _service_bot()
+        bot.config.remove_option("VicEmergency_Service", "latitude")
+        bot.config.remove_option("VicEmergency_Service", "longitude")
+        bot.config.set("Bot", "bot_latitude", "-37.56")
+        bot.config.set("Bot", "bot_longitude", "143.85")
+        svc = VicEmergencyService(bot)
+        assert (svc.lat, svc.lon) == (-37.56, 143.85)
+
+    def test_command_defaults_to_melbourne_gpo(self, monkeypatch):
+        import modules.commands.vicemergency_command as mod
+
+        for name in ("get_companion_lat_lon", "get_config_default_lat_lon", "get_bot_lat_lon"):
+            monkeypatch.setattr(mod, name, lambda *a, **k: None)
+        cmd = VicEmergencyCommand(_command_bot())
+        lat, lon, label, err = cmd._resolve_location(MagicMock(), "")
+        assert (lat, lon, label, err) == (-37.8136, 144.9633, "Melbourne GPO", None)
+        assert cmd.nearby_lines(_sample_feed(), lat, lon, label)[0] == \
+            "VicEmergency 50km of Melbourne GPO: 1 warning, 1 incident"

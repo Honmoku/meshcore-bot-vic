@@ -1100,9 +1100,9 @@ max_results = 4
 min_warning_level = community
 # List incidents as well as warnings. Default: true
 include_incidents = true
-# Location used when the sender has no position (falls back to [Bot] location)
+# Location used when the sender has no position (then [Bot] location, then Melbourne GPO)
 # default_lat = -37.8136
-# default_lon = 144.9631
+# default_lon = 144.9633
 [Rain_Command]
 # Minute-level rain nowcast ("rain starting in ~20min") via Open-Meteo's
 # 15-minutely precipitation. Worldwide, no API key. Keywords: rain, nowcast, snow.
@@ -2592,9 +2592,10 @@ poll_interval = 120000
 # Default: advice
 min_warning_level = advice
 
-# Centre of the watched area. Empty = [Bot] bot_latitude / bot_longitude.
+# Centre of the watched area. Empty = [Bot] bot_latitude / bot_longitude,
+# or Melbourne GPO (350 Bourke St) when the bot has no location either.
 # latitude = -37.8136
-# longitude = 144.9631
+# longitude = 144.9633
 
 # Only post events within this many km of the centre (a warning counts when the
 # centre is inside its warning area). 0 = all of Victoria. Default: 50
